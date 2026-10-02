@@ -3,6 +3,7 @@ from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, St
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 
+
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -11,6 +12,7 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(20), default="staff")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+
 
 class Therapist(Base):
     __tablename__ = "therapists"
@@ -24,6 +26,7 @@ class Therapist(Base):
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     patients = relationship("Patient", back_populates="therapist")
 
+
 class ScheduleOverride(Base):
     __tablename__ = "schedule_overrides"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -33,6 +36,19 @@ class ScheduleOverride(Base):
     start_time: Mapped[str | None] = mapped_column(String(5), nullable=True)
     end_time: Mapped[str | None] = mapped_column(String(5), nullable=True)
     __table_args__ = (UniqueConstraint("therapist_id", "date", name="uq_override_day"),)
+
+
+class Package(Base):
+    __tablename__ = "packages"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    session_count: Mapped[int] = mapped_column(Integer)
+    price: Mapped[float] = mapped_column(Numeric(10, 2))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    patients = relationship("Patient", back_populates="package_record")
+    invoices = relationship("Invoice", back_populates="package")
+
 
 class Patient(Base):
     __tablename__ = "patients"
@@ -44,10 +60,14 @@ class Patient(Base):
     address: Mapped[str] = mapped_column(Text, default="")
     condition: Mapped[str] = mapped_column(String(200))
     therapist_id: Mapped[int | None] = mapped_column(ForeignKey("therapists.id"), nullable=True)
+    # Retained for legacy clients and records that cannot be matched to a package yet.
     package: Mapped[str] = mapped_column(String(100), default="Standard")
+    package_id: Mapped[int | None] = mapped_column(ForeignKey("packages.id"), nullable=True, index=True)
     status: Mapped[str] = mapped_column(String(20), default="Active")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     therapist = relationship("Therapist", back_populates="patients")
+    package_record = relationship("Package", back_populates="patients")
+
 
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -64,10 +84,12 @@ class Appointment(Base):
     therapist = relationship("Therapist")
     __table_args__ = (UniqueConstraint("therapist_id", "date", "time", name="uq_therapist_slot"),)
 
+
 class Invoice(Base):
     __tablename__ = "invoices"
     id: Mapped[int] = mapped_column(primary_key=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"), index=True)
+    package_id: Mapped[int | None] = mapped_column(ForeignKey("packages.id"), nullable=True, index=True)
     service: Mapped[str] = mapped_column(String(160))
     amount: Mapped[float] = mapped_column(Numeric(10, 2))
     discount: Mapped[float] = mapped_column(Numeric(10, 2), default=0)
@@ -75,3 +97,4 @@ class Invoice(Base):
     payment_method: Mapped[str] = mapped_column(String(40), default="Cash")
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     patient = relationship("Patient")
+    package = relationship("Package", back_populates="invoices")
