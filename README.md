@@ -6,11 +6,13 @@ A clinic management take-home implementation using **FastAPI**, **Next.js**, and
 
 - Password-hashed JWT login with enforced `admin` and `staff` roles.
 - Live dashboard statistics and therapist capacity, derived from appointment, therapist schedule, and invoice data.
-- Patient CRUD API, search/filtering, and a detail API with session and billing history.
+- Patient CRUD API, search/filtering, and a profile view/API with overview, session history, and billing history.
+- A first-class package catalogue with session counts and prices; package invoices use the catalogue price automatically.
 - Date-based therapist scheduling with availability checks and database-level double-booking prevention.
-- Admin-only therapist and schedule-override management, and admin-only invoice CRUD.
-- Next.js dashboard using the prescribed palette, Fraunces/Inter/IBM Plex Mono typography, sidebar, cards, status pills, tables, and modal forms.
-- PostgreSQL seed data and an Alembic initial migration.
+- Active-patient, package, and available-therapist dropdowns for appointment and invoice creation. An unassigned patient is assigned automatically when booked.
+- Admin-only therapist, package, schedule-override, and invoice CRUD.
+- Next.js dashboard using the prescribed palette, Fraunces/Inter/IBM Plex Mono typography, sidebar, cards, status pills, tables, profile views, and modal forms.
+- PostgreSQL seed data and Alembic migrations.
 
 ## Quick start
 
@@ -58,7 +60,7 @@ Open <http://localhost:3000>.
 
 ## Authorization
 
-All endpoints except `/auth/login` and `/health` require a Bearer token. Staff members can use dashboard, patients, and schedule APIs/UI. Billing and therapist management are deliberately admin-only and are both hidden in the frontend and protected with backend `403` checks.
+All endpoints except `/auth/login` require a Bearer token. Staff members can use dashboard, patients, and schedule APIs/UI. Billing and therapist management are deliberately admin-only and are both hidden in the frontend and protected with backend `403` checks.
 
 ## Assumptions
 
@@ -66,8 +68,5 @@ All endpoints except `/auth/login` and `/health` require a Bearer token. Staff m
 - A therapist day override takes precedence over the weekly schedule. An `is_off` override removes every slot; a custom start/end override supplies a custom day.
 - A patient with invoices or appointments is retained for clinical/audit history rather than deleted. Likewise, therapists with appointment history cannot be deleted; deactivate them instead. This prevents orphaned historical records.
 - Appointment cancellation does not consume a slot. Invoice `Void` is retained rather than hard-deleted in ordinary UI usage, although the API supports deletion as requested.
-- The creation modals keep the implementation intentionally compact: appointment and invoice forms accept IDs; the current schedule/list views make those IDs visible. A production version would use async searchable comboboxes and full edit/delete affordances in every view.
-
-## With more time
-
-I would add richer patient-profile and edit/delete UI controls, appointment detail/rescheduling modal flows, invoice printing, pagination, CSRF-aware httpOnly refresh-token authentication, test suites (API integration + frontend interaction), loading skeletons/toasts, and a full production Docker setup for API and web service.
+- Packages are clinic-wide catalogue records. They are retained for historical records and should be deactivated rather than deleted once assigned to a patient or invoice.
+- Appointment, invoice, and new-patient forms use selected records rather than raw IDs. Patient, invoice, therapist, and appointment management includes edit/delete or deactivation flows with confirmation where destructive.

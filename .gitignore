@@ -15,3 +15,6 @@ frontend/.next/
 
 # OS
 .DS_Store
+
+# Local commit orchestration
+scripts/progressive-commit.sh
