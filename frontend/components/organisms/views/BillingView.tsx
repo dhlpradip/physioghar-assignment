@@ -42,7 +42,7 @@ export function BillingView({ data, token, openEdit, statusClass }: any) {
                   <span className={`pill ${statusClass(i.status)}`}>{i.status}</span>
                 </td>
                 <td>{new Date(i.issued_at).toLocaleDateString()}</td>
-                <td>
+                <td className="row-actions">
                   <button
                     className="assign-button"
                     onClick={() => openEdit({ kind: 'invoice', record: i })}
