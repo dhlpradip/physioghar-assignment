@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://physiodesk:physiodesk@localhost:5432/physiodesk"
     secret_key: str = "development-only-change-me"
     access_token_expire_minutes: int = 480
+    cors_origins: str = "http://localhost:3000"
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
 settings = Settings()
